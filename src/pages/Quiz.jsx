@@ -2,8 +2,11 @@ import React, { useRef, useState } from "react";
 import CountdownTimer from "../components/CountdownTimer";
 import { QuizData } from "../utils/QuizData";
 import DialogComponent from "../components/DialogComponent";
+import useTraineeStore from "../context/traineeStore";
 
 const Quiz = () => {
+  const {name , category} = useTraineeStore((state) => state.trainee)
+
   const [open, setOpen] = useState(false);
   const [score, setScore] = useState(0);
 
@@ -43,6 +46,8 @@ const Quiz = () => {
       <form onSubmit={handleSubmit}>
         <div className="flex items-center justify-around">
           <h1 className="text-2xl">Pre-Test</h1>
+          <h2>{name}</h2>
+          <h2>{category}</h2>
         </div>
         <div className="flex flex-col bg-slate-400 justify-center items-center">
           <div className=" bg-slate-50 rounded-lg text-2xl  m-2">

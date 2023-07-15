@@ -1,5 +1,5 @@
 import React from "react";
-import { Logos } from "../utils/QuizData";
+import { ExamType, Logos } from "../utils/QuizData";
 import { Link } from "react-router-dom";
 import Button from "../components/Button";
 import useTraineeStore from "../context/traineeStore";
@@ -7,11 +7,15 @@ import DialogComponent from "../components/DialogComponent";
 
 const Home = () => {
   const selectedCategory = useTraineeStore((state) => state.trainee.category);
+  const selectedExamType = useTraineeStore((state) => state.trainee.examType);
   const name = useTraineeStore((state) => state.trainee.name);
   const updateTraineeData = useTraineeStore((state) => state.updateTraineeData);
 
   const handleCategoryChange = (event) => {
     updateTraineeData({ category: event.target.value });
+  };
+  const handleExamTypeChange = (event) => {
+    updateTraineeData({ examType: event.target.value });
   };
 
   const handleNameChange = (event) => {
@@ -21,7 +25,6 @@ const Home = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     // Handle form submission if needed
- 
   };
 
   return (
@@ -51,6 +54,28 @@ const Home = () => {
               ))}
             </div>
 
+            <legend className="text-2xl">Exam Type</legend>
+            <div className="flex p-2 m-2 mb-4 border-b border-gray-200">
+              {ExamType.map((item, index) => (
+                <div
+                  key={item.id}
+                  className={`${
+                    selectedExamType === item.title ? "bg-gray-700" : null
+                  } p-2 hover:scale-110 rounded-lg flex`}
+                >
+                  <input
+                    id={item.title}
+                    type="radio"
+                    name="examType"
+                    value={item.title}
+                    checked={selectedExamType === item.title}
+                    onChange={handleExamTypeChange}
+                  />
+                  <label htmlFor={item.title}>{item.title}</label>
+                </div>
+              ))}
+            </div>
+
             <div className="flex p-2 m-2">
               <input
                 type="text"
@@ -67,7 +92,6 @@ const Home = () => {
           </div>
         </form>
       </div>
-     
     </div>
   );
 };

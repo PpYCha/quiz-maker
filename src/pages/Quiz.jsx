@@ -1,95 +1,124 @@
-import React, { useRef, useState } from "react";
-import CountdownTimer from "../components/CountdownTimer";
+import React, { useState } from "react";
 import { QuizData } from "../utils/QuizData";
-import DialogComponent from "../components/DialogComponent";
+import Button from "../components/Button";
 import useTraineeStore from "../context/traineeStore";
 
 const Quiz = () => {
-  const {name , category} = useTraineeStore((state) => state.trainee)
+  const { category } = useTraineeStore((state) => state.trainee);
 
-  const [open, setOpen] = useState(false);
-  const [score, setScore] = useState(0);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [userAnswers, setUserAnswers] = useState({});
 
-  const cancelButtonRef = useRef(null);
+  const handleNextQuestion = () => {
+    setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
+    console.log("next");
+  };
 
-  const [formData, setFormData] = useState([]);
+  const handlePreviousQuestion = () => {
+    setCurrentQuestionIndex((prevIndex) => prevIndex - 1);
+  };
 
-  const handleSubmit = (e) => {
+  const handleAnswerSelect = (questionId, selectedOption) => {
+    setUserAnswers((prevAnswers) => ({
+      ...prevAnswers,
+      [questionId]: selectedOption,
+    }));
+  };
+
+  const getQuestionByCategory = () => {
+    return QuizData.filter((question) => question.category === category);
+  };
+
+  const currentQuestion = getQuestionByCategory()[currentQuestionIndex];
+  const totalQuestions = getQuestionByCategory().length;
+
+  const handleFinish = (e) => {
     e.preventDefault();
-    const formValues = [];
 
-    QuizData.forEach((item, index) => {
-      const selectedOption = document.querySelector(
-        `input[name=category-${index}]:checked`
-      );
-      const optionValue = selectedOption ? selectedOption.value : null;
+    const categoryData = QuizData.filter((item) => item.category === category);
 
-      formValues.push({ question: item.question, answer: optionValue });
+    const result = categoryData.map((item) => {
+      const userAnswer = userAnswers[item.id];
+      const isCorrect = userAnswer === item.answer;
+      return { ...item, userAnswer, isCorrect };
     });
 
-    setFormData(formValues);
-    console.log(formValues);
-    // Compare answers
-    const correctAnswers = formValues.filter(
-      (formValue) =>
-        QuizData.find((item) => item.question === formValue.question).answer ===
-        formValue.answer
+    console.log(result);
+
+    const correctCount = result.reduce(
+      (count, item) => (item.isCorrect ? count + 1 : count),
+      0
     );
 
-    console.log("Correct answers:", correctAnswers.length);
-    setScore(correctAnswers.length);
-    setOpen(true);
+    console.log("Correct Count:", correctCount);
   };
 
   return (
     <div className="flex flex-col">
-      <form onSubmit={handleSubmit}>
-        <div className="flex items-center justify-around">
-          <h1 className="text-2xl">Pre-Test</h1>
-          <h2>{name}</h2>
-          <h2>{category}</h2>
-        </div>
-        <div className="flex flex-col bg-slate-400 justify-center items-center">
-          <div className=" bg-slate-50 rounded-lg text-2xl  m-2">
-            <div className="bg-gray-700 text-center p-2">
-              <h4 className="mr-2 ">Ms Excel assessment</h4>
-            </div>
-            {QuizData.map((item, index) => (
-              <div key={item.id}>
-                <div className="px-2 py-3 bg-slate-50 border-b border-slate-400">
-                  <p className="text-lg text-black">
-                    {index + 1}. {item.question}
-                  </p>
-                </div>
-                <div className="text-xl bg-slate text-black">
-                  {item.options.map((option, optionIndex) => (
-                    <div
-                      key={option}
-                      className="p-2 bg-gray-100 border-b border-slate-400"
-                    >
-                      <input
-                        id={`option-${index}-${optionIndex}`}
-                        type="radio"
-                        name={`category-${index}`}
-                        value={option}
-                        className="mr-2"
-                      />
-                      <label htmlFor={`option-${index}-${optionIndex}`}>
-                        {option}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-            <button type="submit" className="bg-sky-500 rounded-lg py-1 px-2">
-              Submit
-            </button>
+      {currentQuestion && (
+        <>
+          <div className="flex items-center justify-around">
+            <h1 className="text-2xl">{category}</h1>
+            <h2>Question {currentQuestionIndex + 1}</h2>
           </div>
-        </div>
-      </form>
-
-      <DialogComponent open={open} setOpen={setOpen} score={score} />
+          <div className="flex flex-col bg-slate-400 justify-center items-center">
+            <div className="bg-slate-50 rounded-lg text-2xl m-2">
+              <div className="bg-gray-700 text-center p-2">
+                <h4 className="mr-2">Ms {category} assessment</h4>
+              </div>
+              <div className="px-2 py-3 bg-slate-50 border-b border-slate-400">
+                <p className="text-lg text-black">{currentQuestion.question}</p>
+              </div>
+              <div className="text-xl bg-slate text-black">
+                {currentQuestion.options.map((option, optionIndex) => (
+                  <div
+                    key={option}
+                    className="p-2 bg-gray-100 border-b border-slate-400"
+                  >
+                    <input
+                      id={`option-${currentQuestion.id}-${optionIndex}`}
+                      type="radio"
+                      name={`category-${currentQuestion.id}`}
+                      value={option}
+                      className="mr-2"
+                      checked={
+                        userAnswers[currentQuestion.id] === option
+                          ? true
+                          : false
+                      }
+                      onChange={() =>
+                        handleAnswerSelect(currentQuestion.id, option)
+                      }
+                    />
+                    <label
+                      htmlFor={`option-${currentQuestion.id}-${optionIndex}`}
+                    >
+                      {option}
+                    </label>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-between p-2 m-2">
+                {currentQuestionIndex > 0 && (
+                  <button type="button" onClick={handlePreviousQuestion}>
+                    Back
+                  </button>
+                )}
+                {currentQuestionIndex < totalQuestions - 1 && (
+                  <button type="button" onClick={handleNextQuestion}>
+                    Next
+                  </button>
+                )}
+                {currentQuestionIndex == totalQuestions - 1 && (
+                  <button type="submit" onClick={handleFinish}>
+                    Finish
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
